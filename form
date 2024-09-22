@@ -1,0 +1,346 @@
+// index.php
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Form</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<style>
+  .error{
+    color: red;
+  }
+</style>
+<body>
+    <h3>SUBMIT YOUR DETAILS</h3>
+    <!-- Button to trigger modal -->
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+      Add Here
+    </button>
+
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Fill All Inputs</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="addDataForm" method="POST" enctype="multipart/form-data">
+              <input type="hidden" id="editID" name="editID">
+              
+              <label for="name">Name:</label>
+              <input type="text" id="name" name="name"><br>
+              <span id="nameErr" class="error"></span><br>
+              
+              <label for="lastname">Lastname:</label>
+              <input type="text" id="lastname" name="lastname"><br>
+              <span id="lastnameErr" class="error"></span><br>
+              
+              <label for="email">Email:</label>
+              <input type="email" id="email" name="email"><br>
+              <span id="emailErr" class="error"></span><br>
+              
+              <label for="password">Password:</label>
+              <input type="password" id="password" name="password"><br>
+              <span id="passwordErr" class="error"></span><br>
+
+              <label>Gender:</label><br>
+              <input type="radio" id="gendermale" name="gender" value="male"> Male
+              <input type="radio" id="genderfemale" name="gender" value="female"> Female<br>
+              <span id="genderErr" class="error"></span><br>
+
+              <label for="image">Select Image:</label>
+              <input type="file" id="image" name="image" accept="images/*"><br>
+              <span id="imageError" class="error"></span><br><br>
+              
+              <label>Interests:</label><br>
+              <input type="checkbox" id="editCoding" name="interests[]" value="Coding"> Coding<br>
+              <input type="checkbox" id="editWatching" name="interests[]" value="Watching"> Watching<br>
+              <input type="checkbox" id="editSports" name="interests[]" value="Sports"> Sports<br>
+              <input type="checkbox" id="editListening" name="interests[]" value="Listening"> Listening<br>
+              <input type="checkbox" id="editWorkout" name="interests[]" value="Workout"> Workout<br>
+              <span id="interestsErr" class="error"></span><br>
+
+              <label for="country">Country:</label>
+              <select id="editCountry" name="country">
+                <option value="India">India</option>
+                <option value="Canada">Canada</option>
+                <option value="UK">UK</option>
+                <option value="Aus">Australia</option>
+                <option value="New York">New York</option>
+              </select><br>
+              <span id="countryErr" class="error"></span><br>
+              
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="validation();">Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Listing data -->
+    <div class="listDiv">
+      <table id="dataTable" class="table table-striped">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Lastname</th>
+            <th>Email</th>
+            <th>Gender</th>
+            <th>Country</th>
+            <th>Interests</th>
+            <th>Image</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+         
+        </tbody>
+      </table>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+
+      //validation
+      function validation() {
+        const name = $('#name').val();
+        const lastname = $('#lastname').val();
+        const email = $('#email').val();
+        const password = $('#password').val();
+        const gender = $("input[name='gender']:checked").val();
+        const country = $('#editCountry').val();
+        const image = $('#image').val();
+        const interests = $("input[name='interests[]']:checked").map(function() {
+        return this.value;
+    }).get();
+
+        let valid = true;
+        $('.error').text('');
+
+        if (!name) {
+          valid = false;
+          $('#nameErr').text('Required *');
+        }
+        if (!lastname) {
+          valid = false;
+          $('#lastnameErr').text('Required *');
+        }
+        if (!email) {
+          valid = false;
+          $('#emailErr').text('Email is required.');
+        }
+        if (!password) {
+          valid = false;
+          $('#passwordErr').text('Password is required.');
+        }
+        if (!gender) {
+          valid = false;
+          $('#genderErr').text('Gender is required.');
+        }
+        if (!country) {
+          valid = false;
+          $('#countryErr').text('Country is required.');
+        }
+        if (!image && !$('#editID').val()) {
+          valid = false;
+          $('#imageError').text('Image is required.');
+        }
+        if (interests.length === 0) {
+        valid = false;
+        $('#interestsErr').text('Select at least one interest.');
+    }
+
+        if (valid) {
+          addData();
+        }
+      }
+// insert
+      function addData() {
+        var formData = new FormData(document.getElementById('addDataForm'));
+        $.ajax({
+          url: 'function.php',
+          method: 'POST',
+          data: formData,
+          contentType: false,
+          processData: false,
+          success: function(response) {
+            $('#exampleModal').modal('hide');
+            $('#addDataForm')[0].reset();
+            loadData(); // Refresh data after adding
+          },
+          error: function(err) {
+            alert(err);
+          }
+        });
+      }
+
+      $(document).ready(function() {
+        loadData();
+      });
+// data display in list
+      function loadData() {
+        $.ajax({
+          url: 'function.php',
+          method: 'POST',
+          data: { action: 'fetchAllData' },
+          success: function(response) {
+            $('tbody').html(response);
+          },
+          error: function(err) {
+            alert(err);
+          }
+        });
+      }
+//delete
+      function deleteData(id) {
+        $.ajax({
+          url: 'function.php',
+          method: 'POST',
+          data: { action: 'deleteData', id: id },
+          success: function(response) {
+            loadData();
+          },
+          error: function(err) {
+            alert(err);
+          }
+        });
+      }
+//update
+      function updateData(id) {
+        $.ajax({
+          url: 'function.php',
+          method: 'POST',
+          data: { action: 'fetchSingleData', id: id },
+          success: function(response) {
+            const data = JSON.parse(response);
+            $('#editID').val(data.id);
+            $('#name').val(data.name);
+            $('#lastname').val(data.lastname);
+            $('#email').val(data.email);
+            $('#password').val(data.password); 
+            $("input[name='gender'][value='" + data.gender + "']").prop('checked', true);
+            $('#editCountry').val(data.country);
+            const interests = data.interests.split(',');
+            $('input[name="interests[]"]').each(function() {
+              this.checked = interests.includes($(this).val());
+            });
+            $('#exampleModal').modal('show');
+          },
+          error: function(err) {
+            alert(err);
+          }
+        });
+      }
+    </script>
+</body>
+</html>
+
+//function.php
+<?php
+include 'controls/config.php';
+
+//post actions
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (isset($_POST['action'])) {
+        if ($_POST['action'] == 'fetchAllData') {
+            fetchAllData();
+        } elseif ($_POST['action'] == 'deleteData') {
+            deleteData($_POST['id']);
+        } elseif ($_POST['action'] == 'fetchSingleData') {
+            fetchSingleData($_POST['id']);
+        }
+    } else {
+        saveOrUpdateData();
+    }
+}
+
+function saveOrUpdateData() {
+    global $conn;
+
+    $id = $_POST['editID'];
+    $name = $_POST['name'];
+    $lastname = $_POST['lastname'];
+    $email = $_POST['email'];
+    $password = $_POST['password'];
+    $gender = $_POST['gender'];
+    $country = $_POST['country'];
+    $interests = implode(",", $_POST['interests']);
+
+    $targetDir = "images/";
+    $imageName = basename($_FILES["image"]["name"]);
+    $targetFilePath = $targetDir . $imageName;
+    
+    if (!empty($_FILES["image"]["name"])) {
+        move_uploaded_file($_FILES["image"]["tmp_name"], $targetFilePath);
+    }
+
+    if (empty($id)) {
+        // Insert
+        if (!empty($password)) {
+            $password = password_hash($password, PASSWORD_DEFAULT);
+        }
+        $query = "INSERT INTO users (name, lastname, email, password, gender, country, interests, image) 
+                  VALUES ('$name', '$lastname', '$email', '$password', '$gender', '$country', '$interests', '$imageName')";
+    } else {
+        // Update
+        $query = "UPDATE users SET name='$name', lastname='$lastname', email='$email', gender='$gender', country='$country', interests='$interests'";
+        if (!empty($imageName)) {
+            $query .= ", image='$imageName'";
+        }
+        if (!empty($password)) {
+            $password = password_hash($password, PASSWORD_DEFAULT);
+            $query .= ", password='$password'";
+        }
+        $query .= " WHERE id='$id'";
+    }
+
+    if (mysqli_query($conn, $query)) {
+        echo "Success";
+    } else {
+        echo "Error: " . mysqli_error($conn);
+    }
+}
+//fetch all data for list
+function fetchAllData() {
+    global $conn;
+    $query = "SELECT * FROM users";
+    $result = mysqli_query($conn, $query);
+    $output = '';
+    while ($row = mysqli_fetch_assoc($result)) {
+        $output .= '<tr>';
+        $output .= '<td>' . $row['name'] . '</td>';
+        $output .= '<td>' . $row['lastname'] . '</td>';
+        $output .= '<td>' . $row['email'] . '</td>';
+        $output .= '<td>' . $row['gender'] . '</td>';
+        $output .= '<td>' . $row['country'] . '</td>';
+        $output .= '<td>' . $row['interests'] . '</td>';
+        $output .= '<td><img src="images/' . $row['image'] . '" width="50" height="50"></td>';
+        $output .= '<td><button onclick="updateData(' . $row['id'] . ')">Edit</button>
+                    <button onclick="deleteData(' . $row['id'] . ')">Delete</button></td>';
+        $output .= '</tr>';
+    }
+    echo $output;
+}
+//delete
+function deleteData($id) {
+    global $conn;
+    $query = "DELETE FROM users WHERE id='$id'";
+    mysqli_query($conn, $query);
+}
+//for fetch single row data
+function fetchSingleData($id) {
+    global $conn;
+    $query = "SELECT * FROM users WHERE id='$id'";
+    $result = mysqli_query($conn, $query);
+    $row = mysqli_fetch_assoc($result);
+    echo json_encode($row);
+}
+
